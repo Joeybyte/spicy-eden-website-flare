@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,7 +26,7 @@ const spicyFoods: FoodItem[] = [
     price: 28.90,
     calories: 650,
     spiceLevel: 5,
-    image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1555126634-323283e090fa?w=400&h=300&fit=crop",
     category: "Noodles"
   },
   {
@@ -37,7 +36,7 @@ const spicyFoods: FoodItem[] = [
     price: 24.50,
     calories: 720,
     spiceLevel: 4,
-    image: "https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1608039755401-742074f0548d?w=400&h=300&fit=crop",
     category: "Chicken"
   },
   {
@@ -47,7 +46,7 @@ const spicyFoods: FoodItem[] = [
     price: 26.90,
     calories: 580,
     spiceLevel: 4,
-    image: "https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400&h=300&fit=crop",
     category: "Rice"
   },
   {
@@ -57,7 +56,7 @@ const spicyFoods: FoodItem[] = [
     price: 32.00,
     calories: 890,
     spiceLevel: 3,
-    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=400&h=300&fit=crop",
     category: "Pizza"
   },
   {
@@ -67,7 +66,7 @@ const spicyFoods: FoodItem[] = [
     price: 22.90,
     calories: 520,
     spiceLevel: 4,
-    image: "https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=400&h=300&fit=crop",
     category: "Mexican"
   },
   {
@@ -77,7 +76,7 @@ const spicyFoods: FoodItem[] = [
     price: 29.50,
     calories: 680,
     spiceLevel: 5,
-    image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1617093727343-374698b1b08d?w=400&h=300&fit=crop",
     category: "Ramen"
   }
 ];
