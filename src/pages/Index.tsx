@@ -6,10 +6,13 @@ import { Cart } from '../components/Cart';
 import { Chatbot } from '../components/Chatbot';
 import { Footer } from '../components/Footer';
 import { SubscriptionSection } from '../components/SubscriptionSection';
+import { OrderStatus } from '../components/OrderStatus';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [showOrderStatus, setShowOrderStatus] = useState(false);
 
   const addToCart = (item) => {
     setCartItems(prev => {
@@ -42,7 +45,24 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50">
       <Hero onCartClick={() => setIsCartOpen(true)} cartItemsCount={cartItems.length} />
-      <FoodGrid onAddToCart={addToCart} />
+      
+      {/* Order Status Toggle */}
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <Button 
+          onClick={() => setShowOrderStatus(!showOrderStatus)}
+          variant="outline"
+          className="mb-6"
+        >
+          {showOrderStatus ? '🍽️ View Menu' : '📋 Track Orders'}
+        </Button>
+        
+        {showOrderStatus ? (
+          <OrderStatus />
+        ) : (
+          <FoodGrid onAddToCart={addToCart} />
+        )}
+      </div>
+      
       <SubscriptionSection />
       <Footer />
       

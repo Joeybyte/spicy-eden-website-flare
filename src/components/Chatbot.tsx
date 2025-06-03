@@ -1,48 +1,119 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { X } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
+interface Message {
+  id: string;
+  text: string;
+  isBot: boolean;
+  timestamp: Date;
+}
 
 export const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<Message[]>([
     {
-      id: 1,
+      id: '1',
       text: "🌶️ Hey there! I'm Spice Bot, your fiery food assistant! How can I help you find the perfect spicy dish today?",
-      isBot: true
+      isBot: true,
+      timestamp: new Date()
     }
   ]);
   const [inputValue, setInputValue] = useState('');
+  const [sessionId] = useState(() => crypto.randomUUID());
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const quickReplies = [
-    "Recommend mild spicy dishes",
-    "What's your spiciest item?",
-    "Help with my order",
+    "What's your spiciest dish?",
+    "Recommend mild spicy dishes", 
+    "What are today's specials?",
     "Delivery information",
-    "Nutritional facts"
+    "Nutritional information"
   ];
 
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
+  useEffect(() => {
+    if (isOpen) {
+      loadChatHistory();
+    }
+  }, [isOpen]);
 
-    const userMessage = {
-      id: messages.length + 1,
+  const loadChatHistory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const loadedMessages = data.map(msg => ({
+          id: msg.id,
+          text: msg.message,
+          isBot: msg.is_bot,
+          timestamp: new Date(msg.created_at)
+        }));
+        setMessages(loadedMessages);
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+    }
+  };
+
+  const saveMessage = async (message: string, isBot: boolean) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      await supabase
+        .from('chat_messages')
+        .insert({
+          session_id: sessionId,
+          user_id: user?.id || null,
+          message,
+          is_bot: isBot
+        });
+    } catch (error) {
+      console.error('Error saving message:', error);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: crypto.randomUUID(),
       text: inputValue,
-      isBot: false
+      isBot: false,
+      timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
 
-    // Simulate bot response
-    setTimeout(() => {
+    // Save user message
+    await saveMessage(inputValue, false);
+
+    // Get bot response
+    setTimeout(async () => {
       const botResponse = getBotResponse(inputValue);
-      setMessages(prev => [...prev, {
-        id: prev.length + 1,
+      const botMessage: Message = {
+        id: crypto.randomUUID(),
         text: botResponse,
-        isBot: true
-      }]);
+        isBot: true,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, botMessage]);
+      
+      // Save bot message
+      await saveMessage(botResponse, true);
+      setIsLoading(false);
     }, 1000);
 
     setInputValue('');
@@ -51,32 +122,40 @@ export const Chatbot: React.FC = () => {
   const getBotResponse = (input: string): string => {
     const lowerInput = input.toLowerCase();
     
-    if (lowerInput.includes('mild') || lowerInput.includes('not too spicy')) {
-      return "🌶️ For mild heat, I recommend our Hell's Kitchen Pizza or Blazing Beef Tacos! They have great flavor with manageable spice levels. Perfect for building up your heat tolerance! 🍕🌮";
-    }
-    
     if (lowerInput.includes('spiciest') || lowerInput.includes('hottest')) {
-      return "🔥🔥🔥 Our spiciest dish is the Dragon's Breath Noodles and Fire Storm Ramen - both are 5/5 on the heat scale! Made with ghost peppers and Carolina Reapers. Are you brave enough? 😈";
+      return "🔥🔥🔥 Our spiciest dishes are the Dragon's Breath Noodles and Fire Storm Ramen - both are 5/5 on the heat scale! Made with ghost peppers and Carolina Reapers. Are you brave enough to handle the heat? 😈";
     }
     
-    if (lowerInput.includes('order') || lowerInput.includes('help')) {
-      return "📞 I'm here to help! You can modify quantities in your cart, track your order status, or contact our support team. What specific help do you need with your order?";
+    if (lowerInput.includes('mild') || lowerInput.includes('not too spicy')) {
+      return "🌶️ For mild heat lovers, I recommend our Hell's Kitchen Pizza (3/5 heat) or Blazing Beef Tacos (4/5 heat)! They have amazing flavor with manageable spice levels. Perfect for building up your heat tolerance! 🍕🌮";
     }
     
-    if (lowerInput.includes('delivery')) {
-      return "🚚 We deliver within 30-45 minutes! Free delivery for orders over RM25. Our delivery areas cover all of KL and Selangor. Want to check if we deliver to your area?";
+    if (lowerInput.includes('special') || lowerInput.includes('recommend')) {
+      return "✨ Today's specials include our signature Volcano Curry Rice and the crowd-favorite Inferno Chicken Wings! Both are perfectly balanced with authentic spices. Which type of cuisine are you in the mood for? 🍛🍗";
     }
     
-    if (lowerInput.includes('nutrition') || lowerInput.includes('calories')) {
-      return "📊 All our dishes show calorie counts and nutritional info! We believe in transparency. Most dishes range from 520-890 calories. Any specific dietary concerns I can help with?";
+    if (lowerInput.includes('delivery') || lowerInput.includes('order')) {
+      return "🚚 We deliver within 30-45 minutes! Free delivery for orders over RM25. Our delivery areas cover KL and Selangor. You can place your order right here on our website - just add items to your cart! 📱";
     }
     
-    return "🌶️ That's a great question! Our speciality is balancing incredible flavor with the perfect amount of heat. Would you like me to recommend dishes based on your spice tolerance, or do you have other questions about our menu?";
+    if (lowerInput.includes('nutrition') || lowerInput.includes('calories') || lowerInput.includes('healthy')) {
+      return "📊 All our dishes show detailed nutritional info! Most range from 520-890 calories. We use fresh ingredients and authentic spices. Our Volcano Curry Rice has the lowest calories (580) while still packing serious flavor! 🥗";
+    }
+
+    if (lowerInput.includes('vegan') || lowerInput.includes('vegetarian')) {
+      return "🌱 While our current menu focuses on meat dishes, we can modify some items! Our Volcano Curry Rice can be made vegetarian, and our spicy noodles work great with tofu. Would you like me to suggest some modifications? 🍜";
+    }
+
+    if (lowerInput.includes('price') || lowerInput.includes('cost') || lowerInput.includes('expensive')) {
+      return "💰 Our dishes range from RM22.90 to RM32.00. Best value is our Blazing Beef Tacos at RM22.90! Remember, orders over RM25 get free delivery. What's your budget range? 💵";
+    }
+    
+    return "🌶️ That's a great question! I'm here to help you navigate our spicy menu. Feel free to ask about specific dishes, spice levels, ingredients, or anything else. What would you like to know more about? 🔥";
   };
 
   const handleQuickReply = (reply: string) => {
     setInputValue(reply);
-    handleSendMessage();
+    setTimeout(() => handleSendMessage(), 100);
   };
 
   return (
@@ -123,9 +202,20 @@ export const Chatbot: React.FC = () => {
                   }`}
                 >
                   <p className="text-sm">{message.text}</p>
+                  <p className="text-xs opacity-70 mt-1">
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
                 </div>
               </div>
             ))}
+
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-gray-100 text-gray-800 p-3 rounded-2xl">
+                  <p className="text-sm">🌶️ Thinking...</p>
+                </div>
+              </div>
+            )}
 
             {/* Quick Replies */}
             {messages.length === 1 && (
@@ -136,7 +226,7 @@ export const Chatbot: React.FC = () => {
                     key={index}
                     variant="outline"
                     size="sm"
-                    className="w-full text-left justify-start text-xs"
+                    className="w-full text-left justify-start text-xs hover:bg-red-50"
                     onClick={() => handleQuickReply(reply)}
                   >
                     {reply}
@@ -152,12 +242,14 @@ export const Chatbot: React.FC = () => {
               <Input
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Ask me anything about our spicy food..."
+                placeholder="Ask me about our spicy dishes..."
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                 className="flex-1"
+                disabled={isLoading}
               />
               <Button 
                 onClick={handleSendMessage}
+                disabled={isLoading || !inputValue.trim()}
                 className="bg-red-600 hover:bg-red-700 text-white"
               >
                 Send

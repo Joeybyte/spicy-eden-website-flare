@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { X, Plus, Minus } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface CartItem {
   id: number;
@@ -24,6 +26,7 @@ interface CartProps {
 
 export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuantity, total }) => {
   const [isCheckout, setIsCheckout] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     email: '',
@@ -32,6 +35,7 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
     city: '',
     postalCode: ''
   });
+  const { toast } = useToast();
 
   if (!isOpen) return null;
 
@@ -39,11 +43,85 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
     setCustomerInfo(prev => ({ ...prev, [field]: value }));
   };
 
-  const handlePlaceOrder = () => {
-    // Here you would integrate with payment processing
-    alert('Order placed successfully! 🎉');
-    onClose();
-    setIsCheckout(false);
+  const handlePlaceOrder = async () => {
+    if (!customerInfo.name || !customerInfo.email || !customerInfo.address || !customerInfo.city) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      // Get current user (if logged in)
+      const { data: { user } } = await supabase.auth.getUser();
+
+      // Create the order
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user?.id || null,
+          customer_name: customerInfo.name,
+          customer_email: customerInfo.email,
+          customer_phone: customerInfo.phone,
+          delivery_address: customerInfo.address,
+          city: customerInfo.city,
+          postal_code: customerInfo.postalCode,
+          total_amount: total,
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = items.map(item => ({
+        order_id: order.id,
+        food_item_id: item.id,
+        food_name: item.name,
+        food_price: item.price,
+        quantity: item.quantity,
+        subtotal: item.price * item.quantity
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      toast({
+        title: "Order Placed Successfully! 🎉",
+        description: `Your order #${order.id.slice(0, 8)} has been confirmed. We'll start preparing your spicy feast!`
+      });
+
+      // Clear cart and close modal
+      items.forEach(item => onUpdateQuantity(item.id, 0));
+      onClose();
+      setIsCheckout(false);
+      setCustomerInfo({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        city: '',
+        postalCode: ''
+      });
+
+    } catch (error) {
+      console.error('Error placing order:', error);
+      toast({
+        title: "Order Failed",
+        description: "There was an error placing your order. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -70,6 +148,7 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
                 <div className="text-center py-12">
                   <div className="text-6xl mb-4">🛒</div>
                   <p className="text-gray-500 text-lg">Your cart is empty</p>
+                  <p className="text-gray-400 mt-2">Add some spicy dishes to get started!</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -116,24 +195,31 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
             </>
           ) : (
             <div className="space-y-6">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h3 className="font-semibold text-yellow-800 mb-2">🚚 Delivery Information</h3>
+                <p className="text-yellow-700 text-sm">Free delivery for orders over RM25 • Estimated delivery: 30-45 minutes</p>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name">Full Name *</Label>
                   <Input
                     id="name"
                     value={customerInfo.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     className="mt-1"
+                    placeholder="Your full name"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Email *</Label>
                   <Input
                     id="email"
                     type="email"
                     value={customerInfo.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     className="mt-1"
+                    placeholder="your@email.com"
                   />
                 </div>
                 <div>
@@ -143,26 +229,29 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
                     value={customerInfo.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
                     className="mt-1"
+                    placeholder="+60 12-345 6789"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="city">City</Label>
+                  <Label htmlFor="city">City *</Label>
                   <Input
                     id="city"
                     value={customerInfo.city}
                     onChange={(e) => handleInputChange('city', e.target.value)}
                     className="mt-1"
+                    placeholder="Kuala Lumpur"
                   />
                 </div>
               </div>
               
               <div>
-                <Label htmlFor="address">Full Address</Label>
+                <Label htmlFor="address">Delivery Address *</Label>
                 <Input
                   id="address"
                   value={customerInfo.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
                   className="mt-1"
+                  placeholder="Street address, unit number"
                 />
               </div>
               
@@ -173,19 +262,21 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
                   value={customerInfo.postalCode}
                   onChange={(e) => handleInputChange('postalCode', e.target.value)}
                   className="mt-1"
+                  placeholder="50000"
                 />
               </div>
 
-              <Card className="bg-yellow-50 border-yellow-200">
+              <Card className="bg-green-50 border-green-200">
                 <CardHeader>
-                  <CardTitle className="text-lg">Payment Methods</CardTitle>
+                  <CardTitle className="text-lg text-green-800">💳 Payment Methods</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    <Badge variant="outline" className="mr-2">💳 Credit/Debit Card</Badge>
-                    <Badge variant="outline" className="mr-2">🅿️ PayPal</Badge>
-                    <Badge variant="outline" className="mr-2">💰 Cash on Delivery</Badge>
+                    <Badge variant="outline" className="mr-2 bg-white">💰 Cash on Delivery</Badge>
+                    <Badge variant="outline" className="mr-2 bg-white">💳 Credit/Debit Card</Badge>
+                    <Badge variant="outline" className="mr-2 bg-white">🅿️ PayPal</Badge>
                   </div>
+                  <p className="text-green-700 text-sm mt-2">Payment will be collected upon delivery</p>
                 </CardContent>
               </Card>
             </div>
@@ -195,7 +286,10 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
         {items.length > 0 && (
           <div className="border-t p-6 bg-gray-50">
             <div className="flex justify-between items-center mb-4">
-              <span className="text-xl font-bold">Total:</span>
+              <div className="text-left">
+                <span className="text-lg font-semibold">Total:</span>
+                {total >= 25 && <p className="text-green-600 text-sm">🎉 Free delivery included!</p>}
+              </div>
               <span className="text-2xl font-bold text-red-600">
                 RM {total.toFixed(2)}
               </span>
@@ -214,14 +308,16 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
                   onClick={() => setIsCheckout(false)}
                   variant="outline"
                   className="w-full"
+                  disabled={isProcessing}
                 >
                   ← Back to Cart
                 </Button>
                 <Button 
                   onClick={handlePlaceOrder}
+                  disabled={isProcessing}
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 text-lg rounded-full"
                 >
-                  🎉 Place Order
+                  {isProcessing ? '🔄 Processing...' : '🎉 Place Order'}
                 </Button>
               </div>
             )}
