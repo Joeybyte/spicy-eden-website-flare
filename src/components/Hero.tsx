@@ -59,7 +59,7 @@ export const Hero: React.FC<HeroProps> = ({ onCartClick, cartItemsCount }) => {
             <Button 
               size="lg"
               variant="outline"
-              className="border-2 border-white text-white hover:bg-white hover:text-red-600 font-bold text-lg px-8 py-6 rounded-full transform hover:scale-105 transition-all duration-200"
+              className="border-2 border-white text-red-600 hover:bg-white hover:text-red-600 font-bold text-lg px-8 py-6 rounded-full transform hover:scale-105 transition-all duration-200 bg-white"
             >
               🚀 Order Now
             </Button>
