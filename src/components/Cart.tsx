@@ -5,7 +5,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { X, Plus, Minus } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { X, Plus, Minus, CreditCard, Wallet, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -27,6 +28,7 @@ interface CartProps {
 export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuantity, total }) => {
   const [isCheckout, setIsCheckout] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     email: '',
@@ -48,6 +50,15 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!paymentMethod) {
+      toast({
+        title: "Payment Method Required",
+        description: "Please select a payment method.",
         variant: "destructive"
       });
       return;
@@ -94,15 +105,24 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
 
       if (itemsError) throw itemsError;
 
+      // Payment method specific success message
+      const paymentMessages = {
+        cash: "Your order will be paid upon delivery! 💵",
+        card: "Redirecting to secure payment gateway... 💳",
+        paypal: "Redirecting to PayPal... 🅿️",
+        touchngo: "Redirecting to Touch & Go e-Wallet... 📱"
+      };
+
       toast({
         title: "Order Placed Successfully! 🎉",
-        description: `Your order #${order.id.slice(0, 8)} has been confirmed. We'll start preparing your spicy feast!`
+        description: `Order #${order.id.slice(0, 8)} confirmed. ${paymentMessages[paymentMethod as keyof typeof paymentMessages]}`
       });
 
       // Clear cart and close modal
       items.forEach(item => onUpdateQuantity(item.id, 0));
       onClose();
       setIsCheckout(false);
+      setPaymentMethod('cash');
       setCustomerInfo({
         name: '',
         email: '',
@@ -266,17 +286,64 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
                 />
               </div>
 
-              <Card className="bg-green-50 border-green-200">
+              <Card className="bg-blue-50 border-blue-200">
                 <CardHeader>
-                  <CardTitle className="text-lg text-green-800">💳 Payment Methods</CardTitle>
+                  <CardTitle className="text-lg text-blue-800 flex items-center gap-2">
+                    <CreditCard className="w-5 h-5" />
+                    💳 Payment Methods
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
-                    <Badge variant="outline" className="mr-2 bg-white">💰 Cash on Delivery</Badge>
-                    <Badge variant="outline" className="mr-2 bg-white">💳 Credit/Debit Card</Badge>
-                    <Badge variant="outline" className="mr-2 bg-white">🅿️ PayPal</Badge>
+                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-4">
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-blue-50/50 transition-colors">
+                      <RadioGroupItem value="cash" id="cash" />
+                      <Label htmlFor="cash" className="flex items-center gap-3 cursor-pointer flex-1">
+                        <DollarSign className="w-5 h-5 text-green-600" />
+                        <div>
+                          <div className="font-semibold">💰 Cash on Delivery</div>
+                          <div className="text-sm text-gray-600">Pay when your order arrives</div>
+                        </div>
+                      </Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-blue-50/50 transition-colors">
+                      <RadioGroupItem value="card" id="card" />
+                      <Label htmlFor="card" className="flex items-center gap-3 cursor-pointer flex-1">
+                        <CreditCard className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <div className="font-semibold">💳 Credit/Debit Card</div>
+                          <div className="text-sm text-gray-600">Visa, Mastercard, American Express</div>
+                        </div>
+                      </Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-blue-50/50 transition-colors">
+                      <RadioGroupItem value="paypal" id="paypal" />
+                      <Label htmlFor="paypal" className="flex items-center gap-3 cursor-pointer flex-1">
+                        <Wallet className="w-5 h-5 text-blue-700" />
+                        <div>
+                          <div className="font-semibold">🅿️ PayPal</div>
+                          <div className="text-sm text-gray-600">Pay with your PayPal account</div>
+                        </div>
+                      </Label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-blue-50/50 transition-colors">
+                      <RadioGroupItem value="touchngo" id="touchngo" />
+                      <Label htmlFor="touchngo" className="flex items-center gap-3 cursor-pointer flex-1">
+                        <Wallet className="w-5 h-5 text-purple-600" />
+                        <div>
+                          <div className="font-semibold">📱 Touch & Go e-Wallet</div>
+                          <div className="text-sm text-gray-600">Pay with Touch & Go digital wallet</div>
+                        </div>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                  
+                  <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-green-700 text-sm font-medium">🔒 Secure Payment</p>
+                    <p className="text-green-600 text-xs mt-1">All payments are processed securely with 256-bit SSL encryption</p>
                   </div>
-                  <p className="text-green-700 text-sm mt-2">Payment will be collected upon delivery</p>
                 </CardContent>
               </Card>
             </div>
@@ -314,8 +381,8 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
                 </Button>
                 <Button 
                   onClick={handlePlaceOrder}
-                  disabled={isProcessing}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 text-lg rounded-full"
+                  disabled={isProcessing || !paymentMethod}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 text-lg rounded-full disabled:opacity-50"
                 >
                   {isProcessing ? '🔄 Processing...' : '🎉 Place Order'}
                 </Button>
