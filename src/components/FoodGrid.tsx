@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 
 interface FoodItem {
   id: number;
@@ -88,6 +88,16 @@ const getSpiceEmoji = (level: number) => {
 };
 
 export const FoodGrid: React.FC<FoodGridProps> = ({ onAddToCart }) => {
+  const { toast } = useToast();
+
+  const handleAddToCart = (item: FoodItem) => {
+    onAddToCart(item);
+    toast({
+      title: "Added to Cart! 🛒",
+      description: `${item.name} has been added to your cart`,
+    });
+  };
+
   return (
     <section id="food-grid" className="py-20 px-6">
       <div className="max-w-7xl mx-auto">
@@ -151,7 +161,7 @@ export const FoodGrid: React.FC<FoodGridProps> = ({ onAddToCart }) => {
 
               <CardFooter>
                 <Button 
-                  onClick={() => onAddToCart(food)}
+                  onClick={() => handleAddToCart(food)}
                   className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-full transform hover:scale-105 transition-all duration-200"
                 >
                   🛒 Add to Cart
