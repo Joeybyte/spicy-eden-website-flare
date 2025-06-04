@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -88,7 +89,7 @@ const getSpiceEmoji = (level: number) => {
 
 export const FoodGrid: React.FC<FoodGridProps> = ({ onAddToCart }) => {
   return (
-    <section className="py-20 px-6">
+    <section id="food-grid" className="py-20 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-5xl font-bold text-gray-800 mb-4">

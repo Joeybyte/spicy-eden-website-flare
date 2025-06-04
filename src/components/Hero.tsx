@@ -9,6 +9,21 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ onCartClick, cartItemsCount }) => {
+  const scrollToFoodGrid = () => {
+    const foodSection = document.getElementById('food-grid');
+    if (foodSection) {
+      foodSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleOrderNow = () => {
+    scrollToFoodGrid();
+    // Small delay to let scroll finish, then open cart
+    setTimeout(() => {
+      onCartClick();
+    }, 500);
+  };
+
   return (
     <div className="relative bg-gradient-to-br from-red-600 via-red-500 to-orange-500 min-h-screen flex items-center">
       {/* Background pattern */}
@@ -52,6 +67,7 @@ export const Hero: React.FC<HeroProps> = ({ onCartClick, cartItemsCount }) => {
           <div className="flex flex-col sm:flex-row gap-4">
             <Button 
               size="lg"
+              onClick={scrollToFoodGrid}
               className="bg-yellow-400 hover:bg-yellow-500 text-red-600 font-bold text-lg px-8 py-6 rounded-full transform hover:scale-105 transition-all duration-200 shadow-lg"
             >
               🔥 Browse Food
@@ -59,6 +75,7 @@ export const Hero: React.FC<HeroProps> = ({ onCartClick, cartItemsCount }) => {
             <Button 
               size="lg"
               variant="outline"
+              onClick={handleOrderNow}
               className="border-2 border-white text-red-600 hover:bg-white hover:text-red-600 font-bold text-lg px-8 py-6 rounded-full transform hover:scale-105 transition-all duration-200 bg-white"
             >
               🚀 Order Now
