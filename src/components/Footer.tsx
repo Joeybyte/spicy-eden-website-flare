@@ -2,7 +2,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onChatClick?: () => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onChatClick }) => {
   return (
     <footer className="bg-gray-900 text-white py-16">
       <div className="max-w-7xl mx-auto px-6">
@@ -17,7 +21,10 @@ export const Footer: React.FC = () => {
               Igniting taste buds with authentic spicy flavors. We deliver the perfect balance of heat and taste, 
               crafted for both spice lovers and flavor seekers.
             </p>
-            <Button className="bg-red-600 hover:bg-red-700 text-white rounded-full">
+            <Button 
+              className="bg-red-600 hover:bg-red-700 text-white rounded-full"
+              onClick={onChatClick}
+            >
               🔥 Chat with Us
             </Button>
           </div>

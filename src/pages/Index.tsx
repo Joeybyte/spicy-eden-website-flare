@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Hero } from '../components/Hero';
 import { FoodGrid } from '../components/FoodGrid';
 import { Cart } from '../components/Cart';
@@ -13,6 +13,7 @@ const Index = () => {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [showOrderStatus, setShowOrderStatus] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   const addToCart = (item) => {
     setCartItems(prev => {
@@ -40,6 +41,10 @@ const Index = () => {
     }
   };
 
+  const handleChatClick = () => {
+    setIsChatbotOpen(true);
+  };
+
   const cartTotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
 
   return (
@@ -64,7 +69,7 @@ const Index = () => {
       </div>
       
       <SubscriptionSection />
-      <Footer />
+      <Footer onChatClick={handleChatClick} />
       
       <Cart
         isOpen={isCartOpen}

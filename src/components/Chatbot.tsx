@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,8 +12,13 @@ interface Message {
   timestamp: Date;
 }
 
-export const Chatbot: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface ChatbotProps {
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export const Chatbot: React.FC<ChatbotProps> = ({ isOpen: externalIsOpen, onOpenChange }) => {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -27,6 +31,16 @@ export const Chatbot: React.FC = () => {
   const [sessionId] = useState(() => crypto.randomUUID());
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  // Use external control if provided, otherwise use internal state
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsOpen = (open: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(open);
+    } else {
+      setInternalIsOpen(open);
+    }
+  };
 
   const quickReplies = [
     "What's your spiciest dish?",

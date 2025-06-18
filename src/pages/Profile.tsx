@@ -1,16 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { User, Mail, Phone, MapPin, Crown, Star, Zap, ArrowLeft, Save, Edit, LogOut } from 'lucide-react';
+import { User, Phone, MapPin, Crown, Mail } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -21,33 +19,31 @@ interface Profile {
   city: string | null;
   postal_code: string | null;
   subscription_plan: string;
+  created_at: string;
+  updated_at: string;
 }
 
 const Profile = () => {
-  const { user, signOut } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  
+  const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const { toast } = useToast();
+
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     phone: '',
     address: '',
     city: '',
-    postal_code: '',
+    postal_code: ''
   });
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth');
-      return;
+    if (user) {
+      fetchProfile();
     }
-    fetchProfile();
-  }, [user, navigate]);
+  }, [user]);
 
   const fetchProfile = async () => {
     try {
@@ -59,20 +55,22 @@ const Profile = () => {
 
       if (error) throw error;
 
-      setProfile(data);
-      setFormData({
-        first_name: data.first_name || '',
-        last_name: data.last_name || '',
-        phone: data.phone || '',
-        address: data.address || '',
-        city: data.city || '',
-        postal_code: data.postal_code || '',
-      });
+      if (data) {
+        setProfile(data);
+        setFormData({
+          first_name: data.first_name || '',
+          last_name: data.last_name || '',
+          phone: data.phone || '',
+          address: data.address || '',
+          city: data.city || '',
+          postal_code: data.postal_code || ''
+        });
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
       toast({
         title: "Error",
-        description: "Failed to load profile data.",
+        description: "Failed to load profile data",
         variant: "destructive"
       });
     } finally {
@@ -80,8 +78,12 @@ const Profile = () => {
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSave = async () => {
@@ -89,23 +91,26 @@ const Profile = () => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update(formData)
+        .update({
+          ...formData,
+          updated_at: new Date().toISOString()
+        })
         .eq('id', user?.id);
 
       if (error) throw error;
 
       toast({
-        title: "Success! 🎉",
-        description: "Your profile has been updated.",
+        title: "Success",
+        description: "Profile updated successfully!"
       });
 
-      setEditing(false);
+      // Refresh profile data
       fetchProfile();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
         title: "Error",
-        description: "Failed to update profile.",
+        description: "Failed to update profile",
         variant: "destructive"
       });
     } finally {
@@ -113,38 +118,14 @@ const Profile = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    toast({
-      title: "Signed Out",
-      description: "You've been successfully signed out.",
-    });
-    navigate('/');
-  };
-
-  const getSubscriptionDetails = (plan: string) => {
+  const getMembershipBadge = (plan: string) => {
     switch (plan) {
       case 'premium':
-        return {
-          name: 'Premium Member',
-          icon: <Star className="w-5 h-5" />,
-          color: 'bg-blue-100 text-blue-800 border-blue-200',
-          benefits: ['Free delivery', '10% discount on all orders', 'Priority customer support']
-        };
+        return <Badge className="bg-yellow-500 text-black"><Crown className="w-4 h-4 mr-1" />Premium</Badge>;
       case 'pro':
-        return {
-          name: 'Pro Member',
-          icon: <Crown className="w-5 h-5" />,
-          color: 'bg-purple-100 text-purple-800 border-purple-200',
-          benefits: ['Free delivery', '20% discount on all orders', 'Exclusive menu items', 'VIP customer support']
-        };
+        return <Badge className="bg-purple-600 text-white"><Crown className="w-4 h-4 mr-1" />Pro</Badge>;
       default:
-        return {
-          name: 'Free Member',
-          icon: <Zap className="w-5 h-5" />,
-          color: 'bg-gray-100 text-gray-800 border-gray-200',
-          benefits: ['Standard delivery rates', 'Access to regular menu']
-        };
+        return <Badge variant="secondary">Free</Badge>;
     }
   };
 
@@ -152,254 +133,217 @@ const Profile = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-4">🔄</div>
-          <p className="text-gray-600">Loading your profile...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading profile...</p>
         </div>
       </div>
     );
   }
 
-  if (!profile) return null;
-
-  const subscriptionDetails = getSubscriptionDetails(profile.subscription_plan);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50">
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="text-gray-600 hover:text-gray-800"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
-          </Button>
-          
-          <Button
-            variant="outline"
-            onClick={handleSignOut}
-            className="text-red-600 hover:text-red-700 border-red-200"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 py-12 px-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">My Profile</h1>
+          <p className="text-gray-600">Manage your account and preferences</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Profile Overview */}
-          <Card className="lg:col-span-1">
-            <CardHeader className="text-center bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-t-lg">
-              <div className="w-20 h-20 bg-white/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <User className="w-10 h-10" />
-              </div>
-              <CardTitle className="text-xl">
-                {profile.first_name || profile.last_name 
-                  ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
-                  : 'Welcome!'
-                }
-              </CardTitle>
-              <p className="text-red-100 text-sm">{user?.email}</p>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="text-center mb-4">
-                <Badge className={`${subscriptionDetails.color} px-3 py-1 flex items-center justify-center gap-2 w-fit mx-auto`}>
-                  {subscriptionDetails.icon}
-                  {subscriptionDetails.name}
-                </Badge>
-              </div>
-              
-              <Separator className="my-4" />
-              
-              <div>
-                <h4 className="font-semibold text-gray-800 mb-2">Your Benefits:</h4>
-                <ul className="space-y-1">
-                  {subscriptionDetails.benefits.map((benefit, index) => (
-                    <li key={index} className="text-sm text-gray-600 flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                      {benefit}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              {profile.subscription_plan === 'free' && (
-                <Button 
-                  className="w-full mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  onClick={() => navigate('/')}
-                >
-                  <Crown className="w-4 h-4 mr-2" />
-                  Upgrade Plan
-                </Button>
-              )}
-            </CardContent>
-          </Card>
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="edit">Edit Profile</TabsTrigger>
+          </TabsList>
 
-          {/* Profile Details */}
-          <Card className="lg:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-2xl font-bold text-gray-800">Profile Details</CardTitle>
-              <Button
-                variant="outline"
-                onClick={() => editing ? handleSave() : setEditing(true)}
-                disabled={saving}
-                className="flex items-center gap-2"
-              >
-                {editing ? (
-                  <>
-                    <Save className="w-4 h-4" />
-                    {saving ? 'Saving...' : 'Save Changes'}
-                  </>
-                ) : (
-                  <>
-                    <Edit className="w-4 h-4" />
-                    Edit Profile
-                  </>
-                )}
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Personal Information */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <User className="w-5 h-5" />
-                  Personal Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <TabsContent value="overview">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Profile Overview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Profile Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      value={formData.first_name}
-                      onChange={(e) => handleInputChange('first_name', e.target.value)}
-                      disabled={!editing}
-                      className={!editing ? 'bg-gray-50' : ''}
-                    />
+                    <label className="text-sm font-semibold text-gray-600">Full Name</label>
+                    <p className="text-lg">{profile?.first_name} {profile?.last_name}</p>
                   </div>
                   <div>
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      value={formData.last_name}
-                      onChange={(e) => handleInputChange('last_name', e.target.value)}
-                      disabled={!editing}
-                      className={!editing ? 'bg-gray-50' : ''}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Contact Information */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <Mail className="w-5 h-5" />
-                  Contact Information
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      value={user?.email || ''}
-                      disabled
-                      className="bg-gray-50"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Email cannot be changed here</p>
+                    <label className="text-sm font-semibold text-gray-600">Email</label>
+                    <p className="text-lg flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      {user?.email}
+                    </p>
                   </div>
                   <div>
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      value={formData.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                      disabled={!editing}
-                      className={!editing ? 'bg-gray-50' : ''}
-                      placeholder="+60 12-345 6789"
-                    />
+                    <label className="text-sm font-semibold text-gray-600">Phone</label>
+                    <p className="text-lg flex items-center gap-2">
+                      <Phone className="w-4 h-4" />
+                      {profile?.phone || 'Not provided'}
+                    </p>
                   </div>
-                </div>
-              </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Member Since</label>
+                    <p className="text-lg">{new Date(profile?.created_at || '').toLocaleDateString()}</p>
+                  </div>
+                </CardContent>
+              </Card>
 
-              <Separator />
+              {/* Membership Status */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Crown className="w-5 h-5" />
+                    Membership Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Current Plan</label>
+                    <div className="mt-2">
+                      {getMembershipBadge(profile?.subscription_plan || 'free')}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Benefits</label>
+                    <ul className="mt-2 text-sm text-gray-600 space-y-1">
+                      {profile?.subscription_plan === 'free' && (
+                        <>
+                          <li>• Standard delivery (35-45 min)</li>
+                          <li>• Basic customer support</li>
+                          <li>• Access to full menu</li>
+                        </>
+                      )}
+                      {profile?.subscription_plan === 'premium' && (
+                        <>
+                          <li>• Fast delivery (20-30 min)</li>
+                          <li>• Priority customer support</li>
+                          <li>• 15% discount on all orders</li>
+                          <li>• Free delivery on orders over RM15</li>
+                        </>
+                      )}
+                      {profile?.subscription_plan === 'pro' && (
+                        <>
+                          <li>• Express delivery (15-25 min)</li>
+                          <li>• 24/7 premium support</li>
+                          <li>• 25% discount on all orders</li>
+                          <li>• Free delivery on all orders</li>
+                          <li>• Exclusive menu items</li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Address Information */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <MapPin className="w-5 h-5" />
-                  Address Information
-                </h3>
-                <div className="space-y-4">
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="w-5 h-5" />
+                    Address Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-sm font-semibold text-gray-600">Street Address</label>
+                      <p className="text-lg">{profile?.address || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-gray-600">City</label>
+                      <p className="text-lg">{profile?.city || 'Not provided'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-semibold text-gray-600">Postal Code</label>
+                      <p className="text-lg">{profile?.postal_code || 'Not provided'}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="edit">
+            <Card>
+              <CardHeader>
+                <CardTitle>Edit Profile Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="address">Street Address</Label>
+                    <label className="text-sm font-semibold text-gray-600">First Name</label>
                     <Input
-                      id="address"
-                      value={formData.address}
-                      onChange={(e) => handleInputChange('address', e.target.value)}
-                      disabled={!editing}
-                      className={!editing ? 'bg-gray-50' : ''}
-                      placeholder="123 Main Street, Apartment 4B"
+                      name="first_name"
+                      value={formData.first_name}
+                      onChange={handleInputChange}
+                      placeholder="Enter your first name"
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="city">City</Label>
-                      <Input
-                        id="city"
-                        value={formData.city}
-                        onChange={(e) => handleInputChange('city', e.target.value)}
-                        disabled={!editing}
-                        className={!editing ? 'bg-gray-50' : ''}
-                        placeholder="Kuala Lumpur"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="postalCode">Postal Code</Label>
-                      <Input
-                        id="postalCode"
-                        value={formData.postal_code}
-                        onChange={(e) => handleInputChange('postal_code', e.target.value)}
-                        disabled={!editing}
-                        className={!editing ? 'bg-gray-50' : ''}
-                        placeholder="50000"
-                      />
-                    </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Last Name</label>
+                    <Input
+                      name="last_name"
+                      value={formData.last_name}
+                      onChange={handleInputChange}
+                      placeholder="Enter your last name"
+                    />
                   </div>
                 </div>
-              </div>
 
-              {editing && (
-                <div className="flex gap-2 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setEditing(false);
-                      setFormData({
-                        first_name: profile.first_name || '',
-                        last_name: profile.last_name || '',
-                        phone: profile.phone || '',
-                        address: profile.address || '',
-                        city: profile.city || '',
-                        postal_code: profile.postal_code || '',
-                      });
-                    }}
-                    className="flex-1"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="flex-1 bg-red-600 hover:bg-red-700"
-                  >
-                    {saving ? 'Saving...' : 'Save Changes'}
-                  </Button>
+                <div>
+                  <label className="text-sm font-semibold text-gray-600">Phone Number</label>
+                  <Input
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="Enter your phone number"
+                  />
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-gray-600">Street Address</label>
+                  <Input
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    placeholder="Enter your street address"
+                  />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">City</label>
+                    <Input
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      placeholder="Enter your city"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-semibold text-gray-600">Postal Code</label>
+                    <Input
+                      name="postal_code"
+                      value={formData.postal_code}
+                      onChange={handleInputChange}
+                      placeholder="Enter your postal code"
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="w-full bg-red-600 hover:bg-red-700"
+                >
+                  {saving ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
