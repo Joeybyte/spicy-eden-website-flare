@@ -9,116 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      chat_messages: {
+      profiles: {
         Row: {
-          created_at: string | null
+          address: string | null
+          city: string | null
+          created_at: string
+          first_name: string | null
           id: string
-          is_bot: boolean | null
-          message: string
-          session_id: string
-          user_id: string | null
+          last_name: string | null
+          phone: string | null
+          postal_code: string | null
+          subscription_plan: string | null
+          updated_at: string
         }
         Insert: {
-          created_at?: string | null
-          id?: string
-          is_bot?: boolean | null
-          message: string
-          session_id: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_bot?: boolean | null
-          message?: string
-          session_id?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      order_items: {
-        Row: {
-          created_at: string | null
-          food_item_id: number
-          food_name: string
-          food_price: number
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          first_name?: string | null
           id: string
-          order_id: string | null
-          quantity: number
-          subtotal: number
-        }
-        Insert: {
-          created_at?: string | null
-          food_item_id: number
-          food_name: string
-          food_price: number
-          id?: string
-          order_id?: string | null
-          quantity: number
-          subtotal: number
+          last_name?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          subscription_plan?: string | null
+          updated_at?: string
         }
         Update: {
-          created_at?: string | null
-          food_item_id?: number
-          food_name?: string
-          food_price?: number
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          first_name?: string | null
           id?: string
-          order_id?: string | null
-          quantity?: number
-          subtotal?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "order_items_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      orders: {
-        Row: {
-          city: string
-          created_at: string | null
-          customer_email: string
-          customer_name: string
-          customer_phone: string | null
-          delivery_address: string
-          id: string
-          postal_code: string
-          status: string | null
-          total_amount: number
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          city: string
-          created_at?: string | null
-          customer_email: string
-          customer_name: string
-          customer_phone?: string | null
-          delivery_address: string
-          id?: string
-          postal_code: string
-          status?: string | null
-          total_amount: number
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          city?: string
-          created_at?: string | null
-          customer_email?: string
-          customer_name?: string
-          customer_phone?: string | null
-          delivery_address?: string
-          id?: string
-          postal_code?: string
-          status?: string | null
-          total_amount?: number
-          updated_at?: string | null
-          user_id?: string | null
+          last_name?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          subscription_plan?: string | null
+          updated_at?: string
         }
         Relationships: []
       }

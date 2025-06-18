@@ -1,7 +1,11 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ShoppingCart, User, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface HeroProps {
   onCartClick: () => void;
@@ -9,100 +13,127 @@ interface HeroProps {
 }
 
 export const Hero: React.FC<HeroProps> = ({ onCartClick, cartItemsCount }) => {
-  const scrollToFoodGrid = () => {
-    const foodSection = document.getElementById('food-grid');
-    if (foodSection) {
-      foodSection.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleOrderNow = () => {
-    scrollToFoodGrid();
-    // Small delay to let scroll finish, then open cart
-    setTimeout(() => {
-      onCartClick();
-    }, 500);
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Signed Out",
+      description: "You've been successfully signed out.",
+    });
   };
 
   return (
-    <div className="relative bg-gradient-to-br from-red-600 via-red-500 to-orange-500 min-h-screen flex items-center">
-      {/* Background pattern */}
-      <div className="absolute inset-0 bg-black/20"></div>
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+    <div className="relative min-h-[80vh] bg-gradient-to-br from-red-600 to-orange-600 text-white overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-20 left-20 text-8xl animate-bounce">🌶️</div>
+        <div className="absolute top-40 right-32 text-6xl animate-pulse">🔥</div>
+        <div className="absolute bottom-32 left-1/4 text-7xl animate-bounce delay-1000">🥵</div>
+        <div className="absolute bottom-20 right-20 text-5xl animate-pulse delay-500">🌶️</div>
       </div>
-      
+
       {/* Navigation */}
-      <nav className="absolute top-0 left-0 right-0 z-50 flex justify-between items-center p-6">
+      <nav className="relative z-10 flex justify-between items-center p-6 max-w-7xl mx-auto">
         <div className="flex items-center space-x-2">
           <span className="text-3xl">🌶️</span>
-          <h1 className="text-2xl font-bold text-white">Spicy Eden Kitchen</h1>
+          <h1 className="text-2xl font-bold">Spicy Eden</h1>
         </div>
-        <Button 
-          variant="outline" 
-          className="bg-white/10 border-white/30 text-white hover:bg-white/20 relative"
-          onClick={onCartClick}
-        >
-          <ShoppingCart className="w-5 h-5 mr-2" />
-          Cart
-          {cartItemsCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-yellow-400 text-red-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
-              {cartItemsCount}
-            </span>
+        
+        <div className="flex items-center space-x-4">
+          {user ? (
+            <>
+              <Button
+                variant="ghost"
+                className="text-white hover:bg-white/20"
+                onClick={() => navigate('/profile')}
+              >
+                <User className="w-5 h-5 mr-2" />
+                Profile
+              </Button>
+              <Button
+                variant="ghost"
+                className="text-white hover:bg-white/20"
+                onClick={handleSignOut}
+              >
+                <LogOut className="w-5 h-5 mr-2" />
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="ghost"
+              className="text-white hover:bg-white/20"
+              onClick={() => navigate('/auth')}
+            >
+              <User className="w-5 h-5 mr-2" />
+              Sign In
+            </Button>
           )}
-        </Button>
+          
+          <Button
+            variant="ghost"
+            className="relative text-white hover:bg-white/20"
+            onClick={onCartClick}
+          >
+            <ShoppingCart className="w-6 h-6" />
+            {cartItemsCount > 0 && (
+              <Badge className="absolute -top-2 -right-2 bg-yellow-500 text-black min-w-[1.5rem] h-6 flex items-center justify-center text-xs font-bold">
+                {cartItemsCount}
+              </Badge>
+            )}
+          </Button>
+        </div>
       </nav>
 
       {/* Hero Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
-        <div className="text-white">
-          <h2 className="text-6xl font-bold mb-6 leading-tight">
-            Ignite Your Taste Buds with 
-            <span className="text-yellow-300"> Fiery Flavors</span>
-          </h2>
-          <p className="text-xl mb-8 text-red-100 leading-relaxed">
-            Spicy Eden Kitchen delivers bold, authentic spicy dishes that satisfy both heat seekers and flavor lovers. Experience the perfect balance of fire and taste.
+      <div className="relative z-10 flex flex-col items-center justify-center text-center px-6 py-20">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-6xl md:text-8xl font-bold mb-6 animate-pulse">
+            🔥 SPICY EDEN 🔥
+          </h1>
+          
+          <p className="text-xl md:text-2xl mb-4 font-semibold">
+            Where Every Bite Burns with Flavor!
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button 
-              size="lg"
-              onClick={scrollToFoodGrid}
-              className="bg-yellow-400 hover:bg-yellow-500 text-red-600 font-bold text-lg px-8 py-6 rounded-full transform hover:scale-105 transition-all duration-200 shadow-lg"
-            >
-              🔥 Browse Food
-            </Button>
-            <Button 
-              size="lg"
-              variant="outline"
-              onClick={handleOrderNow}
-              className="border-2 border-white text-red-600 hover:bg-white hover:text-red-600 font-bold text-lg px-8 py-6 rounded-full transform hover:scale-105 transition-all duration-200 bg-white"
-            >
-              🚀 Order Now
-            </Button>
-          </div>
-        </div>
-        
-        <div className="relative">
-          <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-8 transform rotate-3 hover:rotate-0 transition-transform duration-300">
-            <div className="bg-gradient-to-br from-yellow-400 to-orange-400 rounded-2xl p-6 text-red-600">
-              <div className="text-center">
-                <div className="text-6xl mb-4">🌶️🔥</div>
-                <h3 className="text-2xl font-bold mb-2">Heat Level: LEGENDARY</h3>
-                <p className="text-lg">Experience flavors that ignite your soul</p>
-              </div>
-            </div>
+          <p className="text-lg md:text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+            Experience the ultimate spicy food journey with authentic dishes that will set your taste buds on fire. 
+            From mild heat to volcanic intensity - we've got the perfect spice level for everyone!
+          </p>
+          
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
+            <Badge className="bg-yellow-500 text-black text-lg px-4 py-2 animate-bounce">
+              🌶️ Authentic Spices
+            </Badge>
+            <Badge className="bg-orange-500 text-white text-lg px-4 py-2 animate-bounce delay-100">
+              🚚 Fast Delivery
+            </Badge>
+            <Badge className="bg-red-500 text-white text-lg px-4 py-2 animate-bounce delay-200">
+              🔥 Fresh & Hot
+            </Badge>
           </div>
           
-          {/* Floating elements */}
-          <div className="absolute -top-4 -left-4 bg-yellow-400 rounded-full p-3 text-2xl animate-bounce">
-            🌶️
-          </div>
-          <div className="absolute -bottom-4 -right-4 bg-orange-400 rounded-full p-3 text-2xl animate-pulse">
-            🔥
+          <div className="space-y-4">
+            <Button 
+              size="lg" 
+              className="bg-white text-red-600 hover:bg-gray-100 text-xl px-8 py-4 font-bold transform hover:scale-105 transition-all duration-200 shadow-2xl"
+              onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              🌶️ Order Now & Feel the Heat!
+            </Button>
+            
+            <p className="text-sm opacity-75">
+              ⚡ Limited Time: Free delivery on orders over RM25
+            </p>
           </div>
         </div>
       </div>
+
+      {/* Floating Spice Elements */}
+      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/20 to-transparent"></div>
     </div>
   );
 };
