@@ -120,7 +120,7 @@ export const Hero: React.FC<HeroProps> = ({ onCartClick, cartItemsCount }) => {
             <Button 
               size="lg" 
               className="bg-white text-red-600 hover:bg-gray-100 text-xl px-8 py-4 font-bold transform hover:scale-105 transition-all duration-200 shadow-2xl"
-              onClick={() => document.getElementById('menu')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => document.getElementById('food-grid')?.scrollIntoView({ behavior: 'smooth' })}
             >
               🌶️ Order Now & Feel the Heat!
             </Button>
