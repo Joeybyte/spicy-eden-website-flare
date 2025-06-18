@@ -146,8 +146,8 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-        <div className="flex justify-between items-center p-6 border-b bg-red-600 text-white">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[95vh] overflow-hidden flex flex-col">
+        <div className="flex justify-between items-center p-6 border-b bg-red-600 text-white flex-shrink-0">
           <h2 className="text-2xl font-bold">
             {isCheckout ? '🔥 Checkout' : '🛒 Your Cart'}
           </h2>
@@ -161,7 +161,7 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
           </Button>
         </div>
 
-        <div className="overflow-y-auto max-h-[60vh] p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           {!isCheckout ? (
             <>
               {items.length === 0 ? (
@@ -351,7 +351,7 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
         </div>
 
         {items.length > 0 && (
-          <div className="border-t p-6 bg-gray-50">
+          <div className="border-t p-4 bg-gray-50 flex-shrink-0">
             <div className="flex justify-between items-center mb-4">
               <div className="text-left">
                 <span className="text-lg font-semibold">Total:</span>
@@ -365,7 +365,7 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
             {!isCheckout ? (
               <Button 
                 onClick={() => setIsCheckout(true)}
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 text-lg rounded-full"
+                className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 text-lg rounded-full"
               >
                 🚀 Proceed to Checkout
               </Button>
@@ -374,7 +374,7 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
                 <Button 
                   onClick={() => setIsCheckout(false)}
                   variant="outline"
-                  className="w-full"
+                  className="w-full py-2"
                   disabled={isProcessing}
                 >
                   ← Back to Cart
@@ -382,7 +382,7 @@ export const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, onUpdateQuan
                 <Button 
                   onClick={handlePlaceOrder}
                   disabled={isProcessing || !paymentMethod}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 text-lg rounded-full disabled:opacity-50"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 text-lg rounded-full disabled:opacity-50"
                 >
                   {isProcessing ? '🔄 Processing...' : '🎉 Place Order'}
                 </Button>
