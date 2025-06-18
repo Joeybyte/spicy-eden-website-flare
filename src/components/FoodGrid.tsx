@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,7 +25,7 @@ const spicyFoods: FoodItem[] = [
     id: 1,
     name: "Dragon's Breath Noodles",
     description: "Fiery noodles with ghost pepper sauce, tender beef, and fresh herbs",
-    price: 28.90,
+    price: 12.90,
     calories: 650,
     spiceLevel: 5,
     image: "https://images.unsplash.com/photo-1555126634-323283e090fa?w=400&h=300&fit=crop",
@@ -34,7 +35,7 @@ const spicyFoods: FoodItem[] = [
     id: 2,
     name: "Inferno Chicken Wings",
     description: "Crispy wings glazed with Carolina Reaper sauce and honey",
-    price: 24.50,
+    price: 9.50,
     calories: 720,
     spiceLevel: 4,
     image: "https://images.unsplash.com/photo-1608039755401-742074f0548d?w=400&h=300&fit=crop",
@@ -44,7 +45,7 @@ const spicyFoods: FoodItem[] = [
     id: 3,
     name: "Volcano Curry Rice",
     description: "Aromatic curry with scotch bonnet peppers, coconut milk, and jasmine rice",
-    price: 26.90,
+    price: 11.90,
     calories: 580,
     spiceLevel: 4,
     image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400&h=300&fit=crop",
@@ -54,7 +55,7 @@ const spicyFoods: FoodItem[] = [
     id: 4,
     name: "Hell's Kitchen Pizza",
     description: "Wood-fired pizza with jalapeños, pepperoni, and sriracha drizzle",
-    price: 32.00,
+    price: 15.90,
     calories: 890,
     spiceLevel: 3,
     image: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=400&h=300&fit=crop",
@@ -64,17 +65,17 @@ const spicyFoods: FoodItem[] = [
     id: 5,
     name: "Blazing Beef Tacos",
     description: "Spiced beef with habanero salsa, avocado, and lime",
-    price: 22.90,
+    price: 8.90,
     calories: 520,
     spiceLevel: 4,
-    image: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1551504734-5ee1c1479b?w=400&h=300&fit=crop",
     category: "Mexican"
   },
   {
     id: 6,
     name: "Fire Storm Ramen",
     description: "Rich tonkotsu broth with chili oil, soft egg, and chashu pork",
-    price: 29.50,
+    price: 13.50,
     calories: 680,
     spiceLevel: 5,
     image: "https://images.unsplash.com/photo-1617093727343-374698b1b08d?w=400&h=300&fit=crop",

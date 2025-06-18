@@ -28,7 +28,7 @@ const subscriptionPlans: SubscriptionPlan[] = [
     description: 'Perfect for trying out our spicy delights',
     benefits: [
       'Browse full menu',
-      'Standard delivery (3-5 days)',
+      'Standard delivery (35-45 minutes)',
       'Basic customer support',
       'Access to weekly promotions',
       'Recipe suggestions'
